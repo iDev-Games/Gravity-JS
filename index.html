@@ -1,0 +1,618 @@
+<html>
+    <head>
+        <title>Gravity.js Documentation</title>
+
+        <script src="src/gravity.js"></script>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <style>
+            body{
+                margin:0px;
+                padding:0px;
+                background-color:#060606;
+                color:#FFF;
+                font-family: 'Space Mono', monospace;
+                overflow-x:hidden;
+            }
+            hr{
+                margin:0px;
+                border-color:#AAAAAA;
+            }
+            .pageContainer{
+                max-width:100%;
+                overflow:hidden;
+            }
+            .container{
+                background-color:#060606;
+                width:100%;
+                min-height:100vh;
+                position:relative;
+                margin:auto;
+                display:flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
+                max-width: 1800px;
+            }
+            pre{
+                font-size: 22px;
+                white-space: pre-line;
+                background-color: #111;
+                padding: 20px;
+            }
+            .box{
+                position:relative;
+                display: inline-block;
+                width:auto;
+                margin:auto;
+                margin:20px;
+                padding:20px;
+                max-width: 100%;
+            }
+            .boxBG{
+                background-color: rgba(0, 0, 0, 0.8);
+            }
+            .alignCenter{
+                text-align:center;
+            }
+            h1, .gravityText{
+                font-family: 'Bebas Neue', cursive;
+                color: #ff4d4d;
+                text-shadow: 2px 2px 2px #000000;
+                font-size:72px;
+                margin:20px;
+            }
+            h2{
+                font-family: 'Bebas Neue', cursive;
+                color: #FFF;
+                text-shadow: 2px 2px 2px #000000;
+                font-size:52px;
+            }
+            .listItem{
+                font-size: 20px;
+                background-color: #111;
+                padding: 20px;
+                display:inline-block;
+                margin-top:10px;
+            }
+            .moreExamples{
+                display: inline-block;
+                margin: 10px;
+                background-color: #F1F1F1;
+                color: #060606;
+                font-weight: bold;
+                padding: 10px 45px;
+                text-decoration: none;
+            }
+            .demo-container{
+                width:100%;
+                height:400px;
+                position:relative;
+                background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+                overflow:hidden;
+                border:2px solid #ff4d4d;
+            }
+            .physics-box{
+                position:absolute;
+                width:60px;
+                height:60px;
+                background: linear-gradient(135deg, #ff4d4d 0%, #cc0000 100%);
+                border:2px solid #fff;
+                box-shadow: 0 0 10px rgba(255,77,77,0.5);
+            }
+            .physics-box-small{
+                position:absolute;
+                width:50px;
+                height:40px;
+                background: linear-gradient(135deg, #ff4d4d 0%, #cc0000 100%);
+                border:2px solid #fff;
+                box-shadow: 0 0 10px rgba(255,77,77,0.5);
+            }
+            .physics-ball{
+                position:absolute;
+                width:60px;
+                height:60px;
+                background: linear-gradient(135deg, #ffaa00 0%, #ff6600 100%);
+                border-radius:50%;
+                border:2px solid #fff;
+                box-shadow: 0 0 10px rgba(255,170,0,0.5);
+            }
+            .physics-circle{
+                position:absolute;
+                width:50px;
+                height:50px;
+                background: linear-gradient(135deg, #4d94ff 0%, #0066cc 100%);
+                border-radius:50%;
+                border:2px solid #fff;
+                box-shadow: 0 0 10px rgba(77,148,255,0.5);
+            }
+            .physics-ground{
+                position:absolute;
+                bottom:0;
+                width:100%;
+                height:40px;
+                background: linear-gradient(180deg, #2d4a2b 0%, #1f3a1f 100%);
+                border-top:3px solid #4a7a48;
+            }
+            .physics-platform{
+                position:absolute;
+                height:20px;
+                background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+                border-top:2px solid #a0522d;
+            }
+            .sensor-zone{
+                position:absolute;
+                border:3px dashed #ffa500;
+                background:rgba(255,165,0,0.1);
+            }
+            .sensor-zone.gravity-colliding{
+                background:rgba(255,165,0,0.3);
+                border-color:#ff6600;
+            }
+            .demo-label{
+                position:absolute;
+                top:10px;
+                left:10px;
+                background:rgba(0,0,0,0.7);
+                padding:5px 10px;
+                font-size:14px;
+                color:#ffa500;
+                z-index:100;
+            }
+            .collision-indicator{
+                position:absolute;
+                top:10px;
+                right:10px;
+                background:rgba(0,0,0,0.7);
+                padding:5px 10px;
+                font-size:14px;
+                color:#4dff4d;
+                z-index:100;
+            }
+            .reset-button{
+                display:inline-block;
+                margin:10px;
+                background-color:#ff4d4d;
+                color:#fff;
+                font-weight:bold;
+                padding:12px 30px;
+                text-decoration:none;
+                border:2px solid #fff;
+                cursor:pointer;
+                font-family:'Space Mono', monospace;
+                font-size:16px;
+                box-shadow:0 0 10px rgba(255,77,77,0.5);
+                transition:all 0.3s;
+            }
+            .reset-button:hover{
+                background-color:#cc0000;
+                box-shadow:0 0 20px rgba(255,77,77,0.8);
+            }
+            @media screen and (min-width: 768px) {
+                h1{
+                    font-size:122px;
+                }
+                h2{
+                    font-size:72px;
+                }
+            }
+        </style>
+
+    </head>
+    <body data-gravity-world-gravity="9.8">
+        <div class="pageContainer">
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h1 id="logo">Gravity.js</h1>
+                    <hr style="width:200px;background:#ff4d4d;height:3px;border:none;"/>
+                    <h2>Documentation <sup>v1.0.0</sup></h2>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h2>What is Gravity.js?</h2>
+                </div>
+                <div class="box">
+                    Gravity.js is a lightweight physics engine that renders using CSS. Configure physics bodies, collisions, and dynamics entirely through data attributes - no JavaScript required for basic physics interactions.
+                </div>
+                <div class="box">
+                    Using the power of CSS rendering and data attributes, Gravity.js enables collision detection, triggers, and realistic physics in your browser games and applications. It integrates seamlessly with State.js for game state management and Keys.js for player input.
+                </div>
+                <div class="box">
+                    Perfect for creating browser-based games, interactive experiences, and physics simulations without the overhead of canvas rendering. Native DOM elements become physics bodies!
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h2 class="gravityText">Demo 1: Falling Boxes</h2>
+                </div>
+                <div class="demo-container" id="demo1">
+                    <div class="demo-label">Dynamic Bodies with Gravity</div>
+                    <div id="box1" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.4" style="top:50px;left:100px;"></div>
+                    <div id="box2" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="1.5" data-gravity-restitution="0.6" style="top:20px;left:250px;"></div>
+                    <div id="box3" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="0.8" data-gravity-restitution="0.3" style="top:80px;left:400px;"></div>
+                    <div class="physics-ground" data-gravity data-gravity-type="static"></div>
+                </div>
+                <div class="box">
+                    Boxes fall under gravity and bounce on the ground. Different masses and restitution values create varied behaviors.
+                </div>
+                <div class="box">
+                    <button class="reset-button" onclick="gravity.resetBodies('#demo1')">Reset Demo</button>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h2 class="gravityText">Demo 2: Tower of Boxes</h2>
+                </div>
+                <div class="demo-container" id="demo2">
+                    <div class="demo-label">Stack Physics & Projectile</div>
+                    <div id="tower1" class="physics-box-small" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.1" data-gravity-friction="0.9" style="bottom:40px;left:300px;"></div>
+                    <div id="tower2" class="physics-box-small" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.1" data-gravity-friction="0.9" style="bottom:80px;left:300px;"></div>
+                    <div id="tower3" class="physics-box-small" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.1" data-gravity-friction="0.9" style="bottom:120px;left:300px;"></div>
+                    <div id="tower4" class="physics-box-small" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.1" data-gravity-friction="0.9" style="bottom:160px;left:300px;"></div>
+                    <div id="tower5" class="physics-box-small" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.1" data-gravity-friction="0.9" style="bottom:200px;left:300px;"></div>
+                    <div id="projectile" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="1.5" data-gravity-restitution="0.3" data-gravity-friction="0.4" data-gravity-velocity-x="180" data-gravity-velocity-y="30" style="top:160px;left:50px;"></div>
+                    <div class="physics-ground" data-gravity data-gravity-type="static"></div>
+                </div>
+                <div class="box">
+                    A tower of stacked boxes with a projectile ball that knocks them down! High friction keeps boxes stable until impact.
+                </div>
+                <div class="box">
+                    <button class="reset-button" onclick="gravity.resetBodies('#demo2')">Reset Demo</button>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h2 class="gravityText">Demo 3: Platforms</h2>
+                </div>
+                <div class="demo-container" id="demo3">
+                    <div class="demo-label">Static Platform Bodies</div>
+                    <div id="platform-box" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.2" style="top:20px;left:200px;"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:120px;left:50px;width:150px;"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:200px;left:250px;width:150px;"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:150px;left:450px;width:150px;"></div>
+                    <div class="physics-ground" data-gravity data-gravity-type="static"></div>
+                </div>
+                <div class="box">
+                    Static platforms don't move. Watch the dynamic box bounce between platforms with realistic physics!
+                </div>
+                <div class="box">
+                    <button class="reset-button" onclick="gravity.resetBodies('#demo3')">Reset Demo</button>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>How To Install?</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Add the gravity.js file into your project and include it in your HTML head tags:</p>
+                    <pre>
+                        &lt;script src="https://cdn.jsdelivr.net/npm/@idevgames/gravity-js/src/gravity.js"&gt;&lt;/script&gt;
+                    </pre>
+                    <p>Or use npm:</p>
+                    <pre>
+                        npm i @idevgames/gravity-js
+                    </pre>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>How To Use?</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Add the data attribute "data-gravity" or class "enable-gravity" to your HTML element to make it a physics body:</p>
+                    <pre>
+                        &lt;div data-gravity data-gravity-type="dynamic"&gt;&lt;/div&gt;
+                    </pre>
+                    <p>The element will automatically become a physics body and respond to gravity and collisions!</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Physics Body Types</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Three body types are available via <strong>data-gravity-type</strong>:</p>
+                    <div class="listItem">
+                        <strong>dynamic</strong> - Moves and collides (default)
+                    </div>
+                    <div class="listItem">
+                        <strong>static</strong> - Never moves (ground, walls, platforms)
+                    </div>
+                    <div class="listItem">
+                        <strong>kinematic</strong> - Moves but infinite mass (moving platforms)
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Shape Types</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Set collision shape with <strong>data-gravity-shape</strong>:</p>
+                    <div class="listItem">
+                        <strong>box</strong> - Rectangle collision (default, uses element dimensions)
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Physics Properties</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Customize physics behavior with these data attributes:</p>
+                    <div class="listItem">
+                        <strong>data-gravity-mass="1"</strong> - Body mass (affects momentum)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-restitution="0.3"</strong> - Bounciness (0-1)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-friction="0.5"</strong> - Surface friction (0-1)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-density="1"</strong> - Material density
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-fixed-rotation="true"</strong> - Prevent rotation
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Initial Velocity & Forces</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Set initial motion or continuous forces:</p>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-x="10"</strong> - Initial horizontal velocity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-y="-5"</strong> - Initial vertical velocity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-x="2"</strong> - Continuous horizontal force
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-y="0"</strong> - Continuous vertical force
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>CSS Variables</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Gravity.js exposes physics state as CSS variables:</p>
+                    <div class="listItem">
+                        --gravity-x, --gravity-y
+                    </div>
+                    <div class="listItem">
+                        --gravity-rotation
+                    </div>
+                    <div class="listItem">
+                        --gravity-velocity-x, --gravity-velocity-y
+                    </div>
+                    <div class="listItem">
+                        --gravity-speed
+                    </div>
+                    <div class="listItem">
+                        --gravity-collision (1 when colliding)
+                    </div>
+                    <p>Use these in your CSS for dynamic effects based on physics state!</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Collision Detection</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Collisions are detected automatically and trigger:</p>
+                    <div class="listItem">
+                        CSS class <strong>.gravity-colliding</strong> added during collision
+                    </div>
+                    <div class="listItem">
+                        CSS class <strong>.gravity-collision-[id]</strong> for specific collisions
+                    </div>
+                    <div class="listItem">
+                        Custom event <strong>gravitycollision</strong> on collision start
+                    </div>
+                    <div class="listItem">
+                        Custom event <strong>gravityexit</strong> on collision end
+                    </div>
+                    <div class="listItem">
+                        Data attribute <strong>data-collision-with</strong> updated with colliding element ID
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Collision Sensors (Triggers)</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Create trigger zones with <strong>data-gravity-sensor="true"</strong>:</p>
+                    <pre>
+                        &lt;div data-gravity data-gravity-type="static" data-gravity-sensor="true"&gt;&lt;/div&gt;
+                    </pre>
+                    <p>Sensors detect collisions but don't create physical responses. Perfect for trigger zones, checkpoints, and event areas!</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Collision Groups</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Filter collisions with <strong>data-gravity-group</strong>:</p>
+                    <pre>
+                        &lt;div data-gravity data-gravity-group="player"&gt;&lt;/div&gt;
+                        &lt;div data-gravity data-gravity-group="enemy"&gt;&lt;/div&gt;
+                    </pre>
+                    <p>Bodies only collide with others in the same group or the default group.</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>World Settings</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Configure global physics on the body element:</p>
+                    <div class="listItem">
+                        <strong>data-gravity-world-gravity="9.8"</strong> - Global gravity strength
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-world-gravity-x="0"</strong> - Horizontal gravity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-world-gravity-y="9.8"</strong> - Vertical gravity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-damping="0.99"</strong> - Velocity damping
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-angular-damping="0.99"</strong> - Rotation damping
+                    </div>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>JavaScript API</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Optional JavaScript methods for advanced control:</p>
+                    <pre>
+                        gravity.applyForce(elementId, x, y)
+                        gravity.applyImpulse(elementId, x, y)
+                        gravity.setVelocity(elementId, x, y)
+                        gravity.getBody(elementId)
+                        gravity.pauseSimulation()
+                        gravity.resumeSimulation()
+                    </pre>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Integration with State.js</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Gravity.js works seamlessly with State.js for game state management:</p>
+                    <pre>
+                        &lt;div id="player" data-gravity data-state data-state-watch="collision-with"&gt;&lt;/div&gt;
+                        &lt;div id="coin" data-gravity data-gravity-sensor="true"&gt;&lt;/div&gt;
+                    </pre>
+                    <p>Collision events update data attributes that State.js can watch and react to. Use collision sensors to trigger state changes!</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box boxBG">
+                    <h2>Integration with Keys.js</h2>
+                </div>
+                <div class="box boxBG">
+                    <p>Combine with Keys.js for player input:</p>
+                    <pre>
+                        document.addEventListener('keydown', (e) => {
+                            if (keys.isKeyDown('space')) {
+                                gravity.applyImpulse('player', 0, -300);
+                            }
+                            if (keys.isKeyDown('right')) {
+                                gravity.applyForce('player', 50, 0);
+                            }
+                        });
+                    </pre>
+                    <p>Create fully interactive games with physics, input, and state management!</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <div class="gravityText" style="font-size:62px;">BUILD PHYSICS GAMES</div>
+                </div>
+                <div class="box">
+                    <div class="gravityText" style="font-size:62px;">WITH PURE CSS RENDERING</div>
+                </div>
+                <div class="box">
+                    <p>Gravity.js + State.js + Keys.js = Complete Browser Game Engine</p>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container">
+                <div class="box">
+                    <p>Check out the companion libraries:</p>
+                </div>
+                <div class="listItem">
+                    <a href="https://github.com/iDev-Games/State-JS" target="_blank" style="color:#FFF;">State.js - Game State Management</a>
+                </div>
+                <div class="listItem">
+                    <a href="https://github.com/iDev-Games/Keys-JS" target="_blank" style="color:#FFF;">Keys.js - Keyboard Input</a>
+                </div>
+                <div class="box">
+                    <a href="https://dev.to/idevgames" target="_blank" style="color:#FFF;">Keep up to date on dev.to</a>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>
