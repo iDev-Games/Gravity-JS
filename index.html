@@ -2,6 +2,7 @@
     <head>
         <title>Gravity.js Documentation</title>
 
+        <script src="https://cdn.jsdelivr.net/npm/@idevgames/keys-js/src/keys.js"></script>
         <script src="src/gravity.js"></script>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -204,14 +205,21 @@
         </style>
 
     </head>
-    <body data-gravity-world-gravity="9.8">
+    <body data-gravity-world-gravity="19.8">
         <div class="pageContainer">
 
             <div class="container alignCenter">
                 <div class="box">
                     <h1 id="logo">Gravity.js</h1>
                     <hr style="width:200px;background:#ff4d4d;height:3px;border:none;"/>
-                    <h2>Documentation <sup>v1.0.0</sup></h2>
+                    <h2>Documentation <sup>v1.1.0</sup></h2>
+                </div>
+                <div class="box">
+                    <a href="https://codepen.io/collection/JYOKxx" target="_blank" style="text-decoration:none;">
+                        <button class="reset-button" style="background:#000;border:2px solid #4d94ff;">
+                             View Live Demos & Examples on CodePen
+                        </button>
+                    </a>
                 </div>
             </div>
 
@@ -225,7 +233,7 @@
                     Gravity.js is a lightweight physics engine that renders using CSS. Configure physics bodies, collisions, and dynamics entirely through data attributes - no JavaScript required for basic physics interactions.
                 </div>
                 <div class="box">
-                    Using the power of CSS rendering and data attributes, Gravity.js enables collision detection, triggers, and realistic physics in your browser games and applications. It integrates seamlessly with State.js for game state management and Keys.js for player input.
+                    Using SAT (Separating Axis Theorem) for OBB (Oriented Bounding Box) collision detection, Gravity.js supports true rotation and realistic physics. Bodies can tilt, tumble, and collide at any angle. It integrates seamlessly with State.js for game state management and Keys.js for player input.
                 </div>
                 <div class="box">
                     Perfect for creating browser-based games, interactive experiences, and physics simulations without the overhead of canvas rendering. Native DOM elements become physics bodies!
@@ -270,7 +278,7 @@
                     <div class="physics-ground" data-gravity data-gravity-type="static"></div>
                 </div>
                 <div class="box">
-                    A tower of stacked boxes with a projectile ball that knocks them down! High friction keeps boxes stable until impact.
+                    A tower of stacked boxes with a projectile that knocks them down! Watch the boxes rotate and tumble using SAT (Separating Axis Theorem) for OBB collision detection. High friction keeps boxes stable until impact.
                 </div>
                 <div class="box">
                     <button class="reset-button" onclick="gravity.resetBodies('#demo2')">Reset Demo</button>
@@ -284,18 +292,49 @@
                     <h2 class="gravityText">Demo 3: Platforms</h2>
                 </div>
                 <div class="demo-container" id="demo3">
-                    <div class="demo-label">Static Platform Bodies</div>
+                    <div class="demo-label">Static Platform Bodies & Slopes</div>
                     <div id="platform-box" class="physics-box" data-gravity data-gravity-type="dynamic" data-gravity-mass="1" data-gravity-restitution="0.2" style="top:20px;left:200px;"></div>
-                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:120px;left:50px;width:150px;"></div>
-                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:200px;left:250px;width:150px;"></div>
-                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:150px;left:450px;width:150px;"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:120px;left:50px;width:150px;transform:rotate(15deg);"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:200px;left:250px;width:150px;transform:rotate(-15deg)"></div>
+                    <div class="physics-platform" data-gravity data-gravity-type="static" style="bottom:150px;left:450px;width:150px;transform:rotate(-10deg);"></div>
                     <div class="physics-ground" data-gravity data-gravity-type="static"></div>
                 </div>
                 <div class="box">
-                    Static platforms don't move. Watch the dynamic box bounce between platforms with realistic physics!
+                    Static platforms with rotation create slopes! Watch the dynamic box slide down angled platforms and bounce between them. OBB collision allows platforms to be rotated at any angle. Use data-gravity-fixed-rotation="true" on dynamic bodies to prevent rotation.
                 </div>
                 <div class="box">
                     <button class="reset-button" onclick="gravity.resetBodies('#demo3')">Reset Demo</button>
+                </div>
+            </div>
+
+            <hr/>
+
+            <div class="container alignCenter">
+                <div class="box">
+                    <h2 class="gravityText">Demo 4: Keys.js Integration</h2>
+                </div>
+                <div class="demo-container" id="demo4" data-keys data-keys-watch="w,a,s,d,up,down,left,right" data-keys-prevent="w,a,s,d,up,down,left,right" data-keys-var="true">
+                    <div class="demo-label">Use WASD or Arrow Keys to Move</div>
+                    <div id="player" class="physics-box"
+                         data-gravity
+                         data-gravity-type="dynamic"
+                         data-gravity-mass="1"
+                         data-gravity-restitution="0.1"
+                         data-gravity-friction="0.7"
+                         data-gravity-fixed-rotation="true"
+                         data-gravity-force-right="--key-d, --key-right"
+                         data-gravity-force-left="--key-a, --key-left"
+                         data-gravity-force-down="--key-s, --key-down"
+                         data-gravity-force-up="--key-w, --key-up"
+                         data-gravity-force-multiplier="80"
+                         style="top:50px;left:250px;background:#4d94ff;"></div>
+                    <div class="physics-ground" data-gravity data-gravity-type="static"></div>
+                </div>
+                <div class="box">
+                    Keys.js sets CSS variables (--key-d, --key-a, etc.) and Gravity.js reads them via comma-separated CSS variable names. Example: data-gravity-force-right="--key-d, --key-right" combines both D and Right Arrow keys. Fully declarative!
+                </div>
+                <div class="box">
+                    <button class="reset-button" onclick="gravity.resetBodies('#demo4')">Reset Demo</button>
                 </div>
             </div>
 
@@ -399,19 +438,57 @@
                     <h2>Initial Velocity & Forces</h2>
                 </div>
                 <div class="box boxBG">
-                    <p>Set initial motion or continuous forces:</p>
+                    <p><strong>Initial Velocity (Static):</strong></p>
                     <div class="listItem">
                         <strong>data-gravity-velocity-x="10"</strong> - Initial horizontal velocity
                     </div>
                     <div class="listItem">
                         <strong>data-gravity-velocity-y="-5"</strong> - Initial vertical velocity
                     </div>
+                </div>
+                <div class="box boxBG">
+                    <p><strong>Initial Velocity (Directional):</strong></p>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-right="300"</strong> - Initial rightward velocity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-left="100"</strong> - Initial leftward velocity
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-up="200"</strong> - Initial upward velocity (jumps!)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-velocity-down="50"</strong> - Initial downward velocity
+                    </div>
+                    <p style="margin-top:10px;">Directional velocities are combined: (right - left) for horizontal, (down - up) for vertical. Perfect for State.js to spawn projectiles dynamically!</p>
+                </div>
+                <div class="box boxBG">
+                    <p><strong>Continuous Forces (Static):</strong></p>
                     <div class="listItem">
                         <strong>data-gravity-force-x="2"</strong> - Continuous horizontal force
                     </div>
                     <div class="listItem">
                         <strong>data-gravity-force-y="0"</strong> - Continuous vertical force
                     </div>
+                </div>
+                <div class="box boxBG">
+                    <p><strong>Dynamic Forces (CSS Variables):</strong></p>
+                    <div class="listItem">
+                        <strong>data-gravity-force-right="--key-d, --key-right"</strong> - Rightward force from CSS variable(s)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-left="--key-a, --key-left"</strong> - Leftward force from CSS variable(s)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-up="--key-w, --key-up"</strong> - Upward force from CSS variable(s)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-down="--key-s, --key-down"</strong> - Downward force from CSS variable(s)
+                    </div>
+                    <div class="listItem">
+                        <strong>data-gravity-force-multiplier="80"</strong> - Scales directional force values
+                    </div>
+                    <p style="margin-top:10px;">Perfect for Keys.js integration! Accepts comma-separated CSS variable names (values are summed). Forces are combined: (right - left) for horizontal, (down - up) for vertical.</p>
                 </div>
             </div>
 

@@ -1,8 +1,11 @@
 # Gravity.js
 
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
+[![CodePen Demos](https://img.shields.io/badge/CodePen-Demos-black?logo=codepen)](https://codepen.io/collection/JYOKxx)
 
 **Gravity.js** is a lightweight physics engine that renders using CSS. Configure physics bodies, collisions, and dynamics entirely through data attributes - no JavaScript required for basic physics interactions.
+
+🎮 **[View Live Demos & Examples on CodePen](https://codepen.io/collection/JYOKxx)** 🎮
 
 Perfect for creating browser-based games, interactive experiences, and physics simulations without the overhead of canvas rendering. Native DOM elements become physics bodies!
 
@@ -13,7 +16,7 @@ Perfect for creating browser-based games, interactive experiences, and physics s
 Gravity.js brings real physics to the browser using:
 - **CSS Rendering**: No canvas overhead - uses native DOM positioning
 - **Data Attribute Configuration**: Set up physics bodies with HTML attributes
-- **Collision Detection**: AABB
+- **Collision Detection**: SAT (Separating Axis Theorem) for OBB (Oriented Bounding Box)
 - **Zero Dependencies**: Standalone library, works great with State.js and Keys.js
 - **Lightweight**: Minimal footprint, maximum performance
 
@@ -22,9 +25,9 @@ Gravity.js brings real physics to the browser using:
 ## Features
 
 ✅ **Physics Body Types**: Dynamic, Static, and Kinematic bodies
-✅ **Shape Support**: Box (AABB)
-✅ **Realistic Physics**: Mass, restitution, friction, forces, and impulses
-✅ **Collision Detection**: Automatic collision resolution with events
+✅ **Shape Support**: Box (OBB with rotation)
+✅ **Realistic Physics**: Mass, restitution, friction, forces, impulses, and rotation
+✅ **Collision Detection**: SAT-based OBB collision with automatic resolution and events
 ✅ **Collision Sensors**: Trigger zones without physical response
 ✅ **Collision Groups**: Filter which bodies can collide
 ✅ **CSS Variables**: Access physics state in your CSS
@@ -130,13 +133,15 @@ Set the body type with `data-gravity-type`:
 
 Set collision shape with `data-gravity-shape`:
 
-### Box (AABB)
+### Box (OBB)
 ```html
 <div data-gravity data-gravity-shape="box">
 ```
 - Default shape
 - Uses element's width and height
-- Axis-aligned bounding box collision
+- Oriented Bounding Box collision using SAT
+- Supports rotation at any angle
+- Automatically detects rotation from CSS `transform: rotate()`
 
 ## Physics Properties
 
@@ -178,20 +183,39 @@ Set collision shape with `data-gravity-shape`:
 - Useful for characters and upright objects
 - Default: `false`
 
+### Initial Rotation
+```html
+<div data-gravity style="transform: rotate(45deg);">
+```
+- Automatically reads CSS `transform: rotate()` for initial rotation
+- Collision box rotates with the element
+- Can also use `data-gravity-rotation="45"` (in degrees)
+
 ---
 
 ## Initial Velocity & Forces
 
-### Initial Velocity
+### Initial Velocity (Static)
 ```html
 <div data-gravity
      data-gravity-velocity-x="10"
      data-gravity-velocity-y="-5">
 ```
-- Set starting velocity
+- Set starting velocity with X/Y values
 - X: horizontal, Y: vertical
 
-### Continuous Forces
+### Initial Velocity (Directional)
+```html
+<div data-gravity
+     data-gravity-velocity-right="300"
+     data-gravity-velocity-up="200">
+```
+- Set starting velocity with directional values
+- Right/Left are combined: `right - left`
+- Up/Down are combined: `down - up`
+- Perfect for jumps: `data-gravity-velocity-up="300"`
+
+### Continuous Forces (Static)
 ```html
 <div data-gravity
      data-gravity-force-x="2"
@@ -199,6 +223,21 @@ Set collision shape with `data-gravity-shape`:
 ```
 - Applied every physics update
 - Use for constant propulsion
+
+### Dynamic Forces (CSS Variables)
+```html
+<div data-gravity
+     data-gravity-force-right="--key-d, --key-right"
+     data-gravity-force-left="--key-a, --key-left"
+     data-gravity-force-up="--key-w, --key-up"
+     data-gravity-force-down="--key-s, --key-down"
+     data-gravity-force-multiplier="80">
+```
+- Read forces from CSS variables (perfect for Keys.js integration)
+- Accepts comma-separated CSS variable names (values are summed)
+- Right/Left forces are combined: `(right - left) * multiplier`
+- Up/Down forces are combined: `(down - up) * multiplier`
+- Use with Keys.js for declarative player control
 
 ---
 
@@ -406,7 +445,48 @@ When player collides with coin:
 
 ## Integration with Keys.js
 
-Combine with [Keys.js](https://github.com/iDev-Games/Keys-JS) for player input:
+Combine with [Keys.js](https://github.com/iDev-Games/Keys-JS) for player input - **NO JavaScript required!**
+
+### Declarative Integration (Recommended)
+
+Keys.js sets CSS variables that Gravity.js can read automatically:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@idevgames/keys-js/src/keys.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@idevgames/gravity-js/src/gravity.js"></script>
+
+<!-- Container with Keys.js watching WASD keys -->
+<div data-keys
+     data-keys-watch="w,a,s,d"
+     data-keys-prevent="w,a,s,d"
+     data-keys-var="true">
+
+    <!-- Player controlled by keyboard - ZERO JavaScript needed! -->
+    <div id="player"
+         data-gravity
+         data-gravity-type="dynamic"
+         data-gravity-fixed-rotation="true"
+         data-gravity-force-right="--key-d, --key-right"
+         data-gravity-force-left="--key-a, --key-left"
+         data-gravity-force-down="--key-s, --key-down"
+         data-gravity-force-up="--key-w, --key-up"
+         data-gravity-force-multiplier="80">
+    </div>
+</div>
+```
+
+**How it works:**
+- Keys.js sets `--key-*` CSS variables (0 when released, 1 when pressed)
+- Gravity.js reads these via `data-gravity-force-right/left/up/down` attributes
+- Each attribute accepts comma-separated CSS variable names (e.g., `--key-d, --key-right`)
+- Multiple variables are summed together automatically
+- Forces are automatically combined: right - left for X, down - up for Y
+- `data-gravity-force-multiplier` scales the force strength
+- No JavaScript required - pure CSS variable integration!
+
+### JavaScript Integration (Advanced)
+
+For more control, use the JavaScript API:
 
 ```html
 <script src="keys.js"></script>
@@ -588,6 +668,19 @@ Together they form a complete, zero-dependency game engine for the browser!
 | `data-gravity-velocity-y` | number | `0` | Initial vertical velocity |
 | `data-gravity-force-x` | number | `0` | Continuous horizontal force |
 | `data-gravity-force-y` | number | `0` | Continuous vertical force |
+
+### Directional Motion
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `data-gravity-velocity-right` | number | `0` | Initial rightward velocity |
+| `data-gravity-velocity-left` | number | `0` | Initial leftward velocity |
+| `data-gravity-velocity-up` | number | `0` | Initial upward velocity (perfect for jumps!) |
+| `data-gravity-velocity-down` | number | `0` | Initial downward velocity |
+| `data-gravity-force-right` | string | - | CSS variable(s) for rightward force (e.g., `--key-d, --key-right`) |
+| `data-gravity-force-left` | string | - | CSS variable(s) for leftward force (e.g., `--key-a, --key-left`) |
+| `data-gravity-force-up` | string | - | CSS variable(s) for upward force (e.g., `--key-w, --key-up`) |
+| `data-gravity-force-down` | string | - | CSS variable(s) for downward force (e.g., `--key-s, --key-down`) |
+| `data-gravity-force-multiplier` | number | `100` | Multiplier for directional force values |
 
 ### World Settings (on `<body>`)
 | Attribute | Type | Default | Description |
