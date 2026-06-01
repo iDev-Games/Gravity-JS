@@ -38,7 +38,7 @@ Gravity.js brings real physics to the browser using:
 
 ### NPM
 ```bash
-npm i gravity-js
+npm i @idevgames/gravity-js
 ```
 
 ### Direct Include
