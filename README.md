@@ -1,9 +1,15 @@
-# Gravity.js
+<p align="center">
+  <img src="https://github.com/iDev-Games/Gravity-JS/blob/master/logo.png">
+</p>
 
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 [![CodePen Demos](https://img.shields.io/badge/CodePen-Demos-black?logo=codepen)](https://codepen.io/collection/JYOKxx)
 
 **Gravity.js** is a lightweight physics engine that renders using CSS. Configure physics bodies, collisions, and dynamics entirely through data attributes - no JavaScript required for basic physics interactions.
+
+<p align="center">
+  <img src="https://github.com/iDev-Games/Gravity-JS/raw/master/creative.gif">
+</p>
 
 🎮 **[View Live Demos & Examples on CodePen](https://codepen.io/collection/JYOKxx)** 🎮
 
