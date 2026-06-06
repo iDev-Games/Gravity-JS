@@ -55,15 +55,11 @@ class Gravity
         }
 
         const cached = this.getGravityOptions(element);
-
-        // Temporarily remove transform to get actual unrotated dimensions
         const computedStyle = window.getComputedStyle(element);
         const originalTransform = element.style.transform;
         element.style.transform = 'none';
         const rect = element.getBoundingClientRect();
         element.style.transform = originalTransform;
-
-        // Extract rotation from CSS transform
         const transform = computedStyle.transform;
         let initialRotation = 0;
 
@@ -71,10 +67,9 @@ class Gravity
             const values = transform.split('(')[1].split(')')[0].split(',');
             const a = parseFloat(values[0]);
             const b = parseFloat(values[1]);
-            initialRotation = Math.atan2(b, a); // Get rotation in radians from matrix
+            initialRotation = Math.atan2(b, a); 
         }
 
-        // Allow data-gravity-rotation to override CSS if specified
         if (cached.rotation !== 0) {
             initialRotation = cached.rotation * (Math.PI / 180);
         }
@@ -188,7 +183,6 @@ class Gravity
                 fixedRotation: element.getAttribute('data-gravity-fixed-rotation') === 'true',
                 sensor: element.getAttribute('data-gravity-sensor') === 'true',
                 group: element.getAttribute('data-gravity-group') || 'default',
-                // CSS variable sources (for Keys.js integration)
                 velocityRight: element.getAttribute('data-gravity-velocity-right') || null,
                 velocityLeft: element.getAttribute('data-gravity-velocity-left') || null,
                 velocityUp: element.getAttribute('data-gravity-velocity-up') || null,
@@ -277,13 +271,11 @@ class Gravity
     integrateForces(bodyState, dt) {
         if (bodyState.sleeping || bodyState.inverseMass === 0) return;
 
-        // Read forces from CSS variables (for Keys.js integration)
         const cached = this.getGravityOptions(bodyState.element);
 
         let forceX = 0;
         let forceY = 0;
 
-        // Helper function to read CSS variable(s) and sum their values
         const readCSSVars = (varNames) => {
             if (!varNames) return 0;
             const vars = varNames.split(',').map(v => v.trim());
@@ -360,37 +352,27 @@ class Gravity
         bodyState.velocityX *= this.damping;
         bodyState.velocityY *= this.damping;
 
-        // Skip angular physics for circles (they don't visually rotate)
         if (bodyState.shape === 'circle') {
             bodyState.angularVelocity *= this.angularDamping;
             return;
         }
 
-        // Apply righting torque to settle boxes on flat sides
         let angularDampingFactor = this.angularDamping;
 
-        // Normalize rotation to 0-2π range
         const normalizedRotation = ((bodyState.rotation % (Math.PI * 2)) + (Math.PI * 2)) % (Math.PI * 2);
         const angle = normalizedRotation * (180 / Math.PI);
 
-        // Find nearest 90° increment (flat side)
         const targetAngle = Math.round(angle / 90) * 90;
         const angleDiff = (targetAngle - angle) * (Math.PI / 180);
 
         const speed = Math.sqrt(bodyState.velocityX * bodyState.velocityX + bodyState.velocityY * bodyState.velocityY);
         const angSpeed = Math.abs(bodyState.angularVelocity);
 
-        // Only apply righting torque if box is nearly horizontal (not tilted on a slope)
-        // Allow 15° tolerance around horizontal (0° or 180°)
         const nearHorizontal = (angle < 15 || (angle > 165 && angle < 195) || angle > 345);
 
-        // When box is moving slowly AND nearly horizontal, apply torque to rotate to nearest flat side
         if (speed < 5 && angSpeed < 1 && nearHorizontal) {
-            // Stronger torque when nearly stopped
             const torqueStrength = speed < 1 && angSpeed < 0.2 ? 0.08 : 0.03;
             bodyState.angularVelocity += angleDiff * torqueStrength;
-
-            // Extra damping when settling
             angularDampingFactor = 0.92;
         }
 
@@ -448,7 +430,6 @@ class Gravity
         const currentCollisions = new Map();
         let collisionCount = 0;
 
-        // Collect all collisions first (especially important for circles)
         const allCollisions = [];
 
         this.spatialGrid.forEach((bodiesInCell) => {
@@ -473,7 +454,6 @@ class Gravity
             }
         });
 
-        // For circles, only resolve the deepest penetration per circle
         const circleDeepestCollisions = new Map();
         const nonCircleCollisions = [];
 
@@ -494,12 +474,10 @@ class Gravity
             }
         });
 
-        // Resolve only deepest circle collision per circle
         circleDeepestCollisions.forEach(({ bodyA, bodyB, collision }) => {
             this.handleCollision(bodyA, bodyB, collision);
         });
 
-        // Resolve all non-circle collisions
         nonCircleCollisions.forEach(({ bodyA, bodyB, collision }) => {
             this.handleCollision(bodyA, bodyB, collision);
         });
@@ -531,7 +509,6 @@ class Gravity
         } else if (!isCircleA && isCircleB) {
             const collision = this.circleVsObb(bodyB, bodyA);
             if (collision) {
-                // Flip the normal since we swapped the bodies
                 collision.normalX = -collision.normalX;
                 collision.normalY = -collision.normalY;
             }
@@ -541,7 +518,6 @@ class Gravity
         }
     }
 
-    // Circle vs Circle collision
     circleVsCircle(circleA, circleB) {
         const dx = circleB.x - circleA.x;
         const dy = circleB.y - circleA.y;
@@ -563,40 +539,31 @@ class Gravity
         return null;
     }
 
-    // Circle vs OBB collision using SAT
     circleVsObb(circle, box) {
         const boxCorners = this.getBoxCorners(box);
 
-        // Find the closest point on the box to the circle center
         let closestPoint = null;
         let minDistSq = Infinity;
         let bestEdgeNormalX = 0;
         let bestEdgeNormalY = 0;
 
-        // Check each edge of the box
         for (let i = 0; i < boxCorners.length; i++) {
             const p1 = boxCorners[i];
             const p2 = boxCorners[(i + 1) % boxCorners.length];
-
-            // Vector from p1 to p2 (edge)
             const edgeX = p2.x - p1.x;
             const edgeY = p2.y - p1.y;
             const edgeLengthSq = edgeX * edgeX + edgeY * edgeY;
             const edgeLength = Math.sqrt(edgeLengthSq);
 
-            // Edge normal (perpendicular, pointing outward)
             const edgeNormalX = -edgeY / edgeLength;
             const edgeNormalY = edgeX / edgeLength;
 
-            // Vector from p1 to circle center
             const toCircleX = circle.x - p1.x;
             const toCircleY = circle.y - p1.y;
 
-            // Project circle center onto edge
             let t = (toCircleX * edgeX + toCircleY * edgeY) / edgeLengthSq;
-            t = Math.max(0, Math.min(1, t)); // Clamp to edge
+            t = Math.max(0, Math.min(1, t));
 
-            // Closest point on this edge
             const pointX = p1.x + t * edgeX;
             const pointY = p1.y + t * edgeY;
 
@@ -605,8 +572,6 @@ class Gravity
             if (distSq < minDistSq) {
                 minDistSq = distSq;
                 closestPoint = { x: pointX, y: pointY };
-
-                // Use edge normal if circle is close to the edge
                 const dx = circle.x - box.x;
                 const dy = circle.y - box.y;
                 const dotProduct = dx * edgeNormalX + dy * edgeNormalY;
@@ -620,8 +585,6 @@ class Gravity
 
         if (distance < circle.radius) {
             const penetration = circle.radius - distance;
-
-            // Always use direction from closest point to circle center for stability
             const normalX = distance > 0.01 ? (circle.x - closestPoint.x) / distance : bestEdgeNormalX;
             const normalY = distance > 0.01 ? (circle.y - closestPoint.y) / distance : bestEdgeNormalY;
 
@@ -635,14 +598,11 @@ class Gravity
         return null;
     }
 
-    // Get the 4 corners of an oriented box
     getBoxCorners(body) {
         const hw = body.width / 2;
         const hh = body.height / 2;
         const cos = Math.cos(body.rotation);
         const sin = Math.sin(body.rotation);
-
-        // Local corners (relative to center)
         const corners = [
             { x: -hw, y: -hh },
             { x: hw, y: -hh },
@@ -650,21 +610,18 @@ class Gravity
             { x: -hw, y: hh }
         ];
 
-        // Rotate and translate to world space
         return corners.map(corner => ({
             x: body.x + (corner.x * cos - corner.y * sin),
             y: body.y + (corner.x * sin + corner.y * cos)
         }));
     }
 
-    // Get the axes to test for SAT (perpendicular to each edge)
     getAxes(corners) {
         const axes = [];
         for (let i = 0; i < corners.length; i++) {
             const p1 = corners[i];
             const p2 = corners[(i + 1) % corners.length];
             const edge = { x: p2.x - p1.x, y: p2.y - p1.y };
-            // Perpendicular to edge (normal)
             const normal = { x: -edge.y, y: edge.x };
             const len = Math.sqrt(normal.x * normal.x + normal.y * normal.y);
             axes.push({ x: normal.x / len, y: normal.y / len });
@@ -672,7 +629,6 @@ class Gravity
         return axes;
     }
 
-    // Project corners onto an axis
     projectOntoAxis(corners, axis) {
         let min = corners[0].x * axis.x + corners[0].y * axis.y;
         let max = min;
@@ -686,7 +642,6 @@ class Gravity
         return { min, max };
     }
 
-    // SAT collision detection for Oriented Bounding Boxes
     obbVsObb(bodyA, bodyB) {
         const cornersA = this.getBoxCorners(bodyA);
         const cornersB = this.getBoxCorners(bodyB);
@@ -705,7 +660,6 @@ class Gravity
             const overlap = Math.min(projA.max, projB.max) - Math.max(projA.min, projB.min);
 
             if (overlap <= 0) {
-                // Separating axis found - no collision
                 return null;
             }
 
@@ -714,9 +668,6 @@ class Gravity
                 smallestAxis = axis;
             }
         }
-
-        // Collision detected! Return collision info
-        // Make sure normal points from A to B
         const dx = bodyB.x - bodyA.x;
         const dy = bodyB.y - bodyA.y;
         const dot = dx * smallestAxis.x + dy * smallestAxis.y;
@@ -762,7 +713,6 @@ class Gravity
             bodyB.element.classList.add('gravity-awake');
         }
 
-        // Use slightly stronger correction for circles to prevent sticking
         const isCircleInvolved = bodyA.shape === 'circle' || bodyB.shape === 'circle';
         const percent = isCircleInvolved ? 0.85 : 0.8;
         const slop = isCircleInvolved ? 0.05 : 0.1;
@@ -795,7 +745,6 @@ class Gravity
         bodyB.velocityX += impulseX * bodyB.inverseMass;
         bodyB.velocityY += impulseY * bodyB.inverseMass;
 
-        // Apply rotational impulse (only for boxes, circles don't rotate visually)
         if (!bodyA.fixedRotation && bodyA.shape !== 'circle') {
             const rAx = normalX * bodyA.width / 2;
             const rAy = normalY * bodyA.height / 2;
