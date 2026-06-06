@@ -212,7 +212,7 @@
                 <div class="box">
                     <h1 id="logo">Gravity.js</h1>
                     <hr style="width:200px;background:#ff4d4d;height:3px;border:none;"/>
-                    <h2>Documentation <sup>v1.1.0</sup></h2>
+                    <h2>Documentation <sup>v1.1.1</sup></h2>
                 </div>
                 <div class="box">
                     <a href="https://codepen.io/collection/JYOKxx" target="_blank" style="text-decoration:none;">
@@ -440,27 +440,34 @@
                 <div class="box boxBG">
                     <p><strong>Initial Velocity (Static):</strong></p>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-x="10"</strong> - Initial horizontal velocity
+                        <strong>data-gravity-velocity-x="10"</strong> - Initial horizontal velocity (accepts CSS variables like --cursor-x)
                     </div>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-y="-5"</strong> - Initial vertical velocity
+                        <strong>data-gravity-velocity-y="-5"</strong> - Initial vertical velocity (accepts CSS variables like --cursor-y)
                     </div>
                 </div>
                 <div class="box boxBG">
                     <p><strong>Initial Velocity (Directional):</strong></p>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-right="300"</strong> - Initial rightward velocity
+                        <strong>data-gravity-velocity-right="300"</strong> - Initial rightward velocity (accepts CSS variables)
                     </div>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-left="100"</strong> - Initial leftward velocity
+                        <strong>data-gravity-velocity-left="100"</strong> - Initial leftward velocity (accepts CSS variables)
                     </div>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-up="200"</strong> - Initial upward velocity (jumps!)
+                        <strong>data-gravity-velocity-up="200"</strong> - Initial upward velocity (jumps! accepts CSS variables)
                     </div>
                     <div class="listItem">
-                        <strong>data-gravity-velocity-down="50"</strong> - Initial downward velocity
+                        <strong>data-gravity-velocity-down="50"</strong> - Initial downward velocity (accepts CSS variables)
                     </div>
-                    <p style="margin-top:10px;">Directional velocities are combined: (right - left) for horizontal, (down - up) for vertical. Perfect for State.js to spawn projectiles dynamically!</p>
+                    <p style="margin-top:10px;">Directional velocities are combined: (right - left) for horizontal, (down - up) for vertical. All velocity attributes accept CSS variables (e.g., --cursor-x from Cursor.js). Perfect for State.js to spawn projectiles dynamically!</p>
+                </div>
+                <div class="box boxBG">
+                    <p><strong>Container Bounds:</strong></p>
+                    <div class="listItem">
+                        <strong>data-gravity-container</strong> - Add to parent element to create invisible walls/ceiling/floor
+                    </div>
+                    <p style="margin-top:10px;">Dynamic bodies will bounce off container edges. Perfect for keeping objects in view with cursor/mouse interaction!</p>
                 </div>
                 <div class="box boxBG">
                     <p><strong>Continuous Forces (Static):</strong></p>

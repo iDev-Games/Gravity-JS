@@ -4,6 +4,8 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 [![CodePen Demos](https://img.shields.io/badge/CodePen-Demos-black?logo=codepen)](https://codepen.io/collection/JYOKxx)
+![npm bundle size](https://img.shields.io/bundlephobia/min/%40idevgames%2Fgravity-js)
+
 
 **Gravity.js** is a lightweight physics engine that renders using CSS. Configure physics bodies, collisions, and dynamics entirely through data attributes - no JavaScript required for basic physics interactions.
 
@@ -197,6 +199,17 @@ Set collision shape with `data-gravity-shape`:
 - Collision box rotates with the element
 - Can also use `data-gravity-rotation="45"` (in degrees)
 
+### Container Bounds
+```html
+<div data-gravity-container style="width:800px;height:600px;">
+    <div data-gravity data-gravity-type="dynamic">Contained!</div>
+</div>
+```
+- Add `data-gravity-container` to a parent element
+- Creates invisible walls, ceiling, and floor
+- Dynamic bodies bounce off container edges
+- Perfect for keeping objects in view with cursor/mouse interaction
+
 ---
 
 ## Initial Velocity & Forces
@@ -209,6 +222,7 @@ Set collision shape with `data-gravity-shape`:
 ```
 - Set starting velocity with X/Y values
 - X: horizontal, Y: vertical
+- Accepts CSS variables: `data-gravity-velocity-x="--cursor-x"`
 
 ### Initial Velocity (Directional)
 ```html
@@ -219,6 +233,7 @@ Set collision shape with `data-gravity-shape`:
 - Set starting velocity with directional values
 - Right/Left are combined: `right - left`
 - Up/Down are combined: `down - up`
+- Also accepts CSS variables: `data-gravity-velocity-right="--cursor-x"`
 - Perfect for jumps: `data-gravity-velocity-up="300"`
 
 ### Continuous Forces (Static)

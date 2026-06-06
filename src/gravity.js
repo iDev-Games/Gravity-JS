@@ -17,6 +17,7 @@ class Gravity
     accumulator = 0;
     fixedTimeStep = 1000 / 60;
     animationFrameId = null;
+    containerBounds = null;
 
     constructor() {
         this.gravityInit = this.gravityInit.bind(this);
@@ -26,6 +27,19 @@ class Gravity
     }
 
     gravityInit() {
+        const container = document.querySelector('[data-gravity-container]');
+        if (container) {
+            const rect = container.getBoundingClientRect();
+            this.containerBounds = {
+                left: rect.left,
+                right: rect.right,
+                top: rect.top,
+                bottom: rect.bottom,
+                width: rect.width,
+                height: rect.height
+            };
+        }
+
         this.bodies = document.querySelectorAll('body,.enable-gravity,[data-gravity]');
         this.bodies.forEach((element, index) => {
             element.index = index;
@@ -65,18 +79,26 @@ class Gravity
             initialRotation = cached.rotation * (Math.PI / 180);
         }
 
-        // Calculate initial velocity from directional attributes if present
-        let initialVelocityX = cached.velocityX;
-        let initialVelocityY = cached.velocityY;
+        const parseValue = (value, element) => {
+            if (!value) return 0;
+            const str = value.toString().trim();
+            if (str.startsWith('--')) {
+                return parseFloat(getComputedStyle(element).getPropertyValue(str).trim()) || 0;
+            }
+            return parseFloat(str) || 0;
+        };
+
+        let initialVelocityX = parseValue(cached.velocityX, element);
+        let initialVelocityY = parseValue(cached.velocityY, element);
 
         if (cached.velocityRight || cached.velocityLeft) {
-            const right = cached.velocityRight ? parseFloat(cached.velocityRight) || 0 : 0;
-            const left = cached.velocityLeft ? parseFloat(cached.velocityLeft) || 0 : 0;
+            const right = parseValue(cached.velocityRight, element);
+            const left = parseValue(cached.velocityLeft, element);
             initialVelocityX = right - left;
         }
         if (cached.velocityUp || cached.velocityDown) {
-            const down = cached.velocityDown ? parseFloat(cached.velocityDown) || 0 : 0;
-            const up = cached.velocityUp ? parseFloat(cached.velocityUp) || 0 : 0;
+            const down = parseValue(cached.velocityDown, element);
+            const up = parseValue(cached.velocityUp, element);
             initialVelocityY = down - up;
         }
 
@@ -157,8 +179,8 @@ class Gravity
                 restitution: parseFloat(element.getAttribute('data-gravity-restitution')) || 0.3,
                 friction: parseFloat(element.getAttribute('data-gravity-friction')) || 0.5,
                 density: parseFloat(element.getAttribute('data-gravity-density')) || 1,
-                velocityX: parseFloat(element.getAttribute('data-gravity-velocity-x')) || 0,
-                velocityY: parseFloat(element.getAttribute('data-gravity-velocity-y')) || 0,
+                velocityX: element.getAttribute('data-gravity-velocity-x') || '0',
+                velocityY: element.getAttribute('data-gravity-velocity-y') || '0',
                 forceX: parseFloat(element.getAttribute('data-gravity-force-x')) || 0,
                 forceY: parseFloat(element.getAttribute('data-gravity-force-y')) || 0,
                 radius: parseFloat(element.getAttribute('data-gravity-radius')) || null,
@@ -310,6 +332,28 @@ class Gravity
         bodyState.x += bodyState.velocityX * dt * 3;
         bodyState.y += bodyState.velocityY * dt * 3;
         bodyState.rotation += bodyState.angularVelocity * dt;
+
+        if (this.containerBounds && bodyState.type === 'dynamic') {
+            const halfWidth = bodyState.width / 2;
+            const halfHeight = bodyState.height / 2;
+
+            if (bodyState.x - halfWidth < this.containerBounds.left) {
+                bodyState.x = this.containerBounds.left + halfWidth;
+                bodyState.velocityX = Math.abs(bodyState.velocityX) * bodyState.restitution;
+            }
+            if (bodyState.x + halfWidth > this.containerBounds.right) {
+                bodyState.x = this.containerBounds.right - halfWidth;
+                bodyState.velocityX = -Math.abs(bodyState.velocityX) * bodyState.restitution;
+            }
+            if (bodyState.y - halfHeight < this.containerBounds.top) {
+                bodyState.y = this.containerBounds.top + halfHeight;
+                bodyState.velocityY = Math.abs(bodyState.velocityY) * bodyState.restitution;
+            }
+            if (bodyState.y + halfHeight > this.containerBounds.bottom) {
+                bodyState.y = this.containerBounds.bottom - halfHeight;
+                bodyState.velocityY = -Math.abs(bodyState.velocityY) * bodyState.restitution;
+            }
+        }
     }
 
     applyDamping(bodyState) {
