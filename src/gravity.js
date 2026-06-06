@@ -1,4 +1,4 @@
-/* Gravity.js v1.1.0 by iDev Games */
+/* Gravity.js v1.1.2 by iDev Games */
 class Gravity
 {
     bodies = [];
@@ -115,7 +115,7 @@ class Gravity
             forceX: cached.forceX,
             forceY: cached.forceY,
             mass: cached.mass,
-            inverseMass: cached.type === 'static' ? 0 : 1 / cached.mass,
+            inverseMass: (cached.type === 'static' || cached.type === 'kinematic') ? 0 : 1 / cached.mass,
             inertia: this.calculateInertia(cached.mass, rect.width, rect.height, cached.shape, cached.radius),
             inverseInertia: 0,
             restitution: cached.restitution,
@@ -191,7 +191,10 @@ class Gravity
                 forceLeft: element.getAttribute('data-gravity-force-left') || null,
                 forceUp: element.getAttribute('data-gravity-force-up') || null,
                 forceDown: element.getAttribute('data-gravity-force-down') || null,
-                forceMultiplier: parseFloat(element.getAttribute('data-gravity-force-multiplier')) || 100
+                forceMultiplier: parseFloat(element.getAttribute('data-gravity-force-multiplier')) || 100,
+                positionX: element.getAttribute('data-gravity-position-x') || null,
+                positionY: element.getAttribute('data-gravity-position-y') || null,
+                rotationVar: element.getAttribute('data-gravity-rotation-var') || null
             };
 
             this.gravityAttributesCache.set(element, cached);
@@ -250,10 +253,14 @@ class Gravity
         this.bodyData.forEach((bodyState, element) => {
             if (bodyState.type === 'static') return;
 
-            this.integrateForces(bodyState, dt);
+            if (bodyState.type !== 'kinematic') {
+                this.integrateForces(bodyState, dt);
+            }
             this.integrateVelocity(bodyState, dt);
-            this.applyDamping(bodyState);
-            this.updateSleeping(bodyState, dt);
+            if (bodyState.type !== 'kinematic') {
+                this.applyDamping(bodyState);
+                this.updateSleeping(bodyState, dt);
+            }
         });
 
         for (let i = 0; i < this.velocityIterations; i++) {
@@ -312,6 +319,53 @@ class Gravity
 
     integrateVelocity(bodyState, dt) {
         if (bodyState.sleeping) return;
+
+        const cached = this.getGravityOptions(bodyState.element);
+
+        if (bodyState.type === 'kinematic' && (cached.positionX || cached.positionY || cached.rotationVar)) {
+            const oldX = bodyState.x;
+            const oldY = bodyState.y;
+            const oldRotation = bodyState.rotation;
+
+            if (cached.positionX) {
+                const posStr = cached.positionX.trim();
+                if (posStr.startsWith('--')) {
+                    const percent = parseFloat(getComputedStyle(bodyState.element).getPropertyValue(posStr).trim()) || 0;
+                    if (this.containerBounds) {
+                        bodyState.x = this.containerBounds.left + (this.containerBounds.width * percent / 100);
+                    }
+                } else {
+                    bodyState.x = parseFloat(posStr);
+                }
+            }
+            if (cached.positionY) {
+                const posStr = cached.positionY.trim();
+                if (posStr.startsWith('--')) {
+                    const percent = parseFloat(getComputedStyle(bodyState.element).getPropertyValue(posStr).trim()) || 0;
+                    if (this.containerBounds) {
+                        bodyState.y = this.containerBounds.top + (this.containerBounds.height * percent / 100);
+                    }
+                } else {
+                    bodyState.y = parseFloat(posStr);
+                }
+            }
+            if (cached.rotationVar) {
+                const rotStr = cached.rotationVar.trim();
+                if (rotStr.startsWith('--')) {
+                    const degrees = parseFloat(getComputedStyle(bodyState.element).getPropertyValue(rotStr).trim()) || 0;
+                    bodyState.rotation = degrees * (Math.PI / 180);
+                }
+            }
+
+            if (dt > 0) {
+                bodyState.velocityX = (bodyState.x - oldX) / dt * 0.2;
+                bodyState.velocityY = (bodyState.y - oldY) / dt * 0.2;
+                bodyState.angularVelocity = (bodyState.rotation - oldRotation) / dt * 0.2;
+            }
+
+            this.updateElement(bodyState.element, bodyState);
+            return;
+        }
 
         const maxVelocity = 800;
         const speed = Math.sqrt(bodyState.velocityX * bodyState.velocityX + bodyState.velocityY * bodyState.velocityY);
@@ -910,10 +964,17 @@ class Gravity
         element.setAttribute('data-velocity-y', Math.round(bodyState.velocityY * 10) / 10);
         element.setAttribute('data-speed', Math.round(speed * 10) / 10);
 
-        if (bodyState.type !== 'static') {
+        if (bodyState.type !== 'static' && bodyState.type !== 'kinematic') {
             const offsetX = bodyState.x - bodyState.initialX;
             const offsetY = bodyState.y - bodyState.initialY;
             element.style.transform = `translate(${offsetX}px, ${offsetY}px) rotate(${bodyState.rotation}rad)`;
+        } else if (bodyState.type === 'kinematic') {
+            const left = bodyState.x - bodyState.width / 2;
+            const top = bodyState.y - bodyState.height / 2;
+            element.style.left = `${left}px`;
+            element.style.top = `${top}px`;
+            element.style.transform = `rotate(${bodyState.rotation}rad)`;
+            element.style.position = 'absolute';
         }
     }
 

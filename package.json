@@ -1,6 +1,6 @@
 {
   "name": "@idevgames/gravity-js",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Gravity.js is a lightweight Box2D-inspired physics engine that renders using CSS. Configure physics bodies through data attributes, no JavaScript required. Integrates seamlessly with State.js and Keys.js to form a complete browser-based game engine with collision detection, triggers, and dynamic interactions.",
   "main": "src/gravity.js",
   "repository": {
