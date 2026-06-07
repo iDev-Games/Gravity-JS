@@ -1,4 +1,4 @@
-/* Gravity.js v1.1.2 by iDev Games */
+/* Gravity.js v1.2.0 by iDev Games */
 class Gravity
 {
     bodies = [];
@@ -12,12 +12,13 @@ class Gravity
     angularDamping = 0.98;
     velocityIterations = 6;
     positionIterations = 2;
+    constraintIterations = 5;
     running = false;
     lastTime = 0;
     accumulator = 0;
     fixedTimeStep = 1000 / 60;
     animationFrameId = null;
-    containerBounds = null;
+    constraints = [];
 
     constructor() {
         this.gravityInit = this.gravityInit.bind(this);
@@ -27,19 +28,6 @@ class Gravity
     }
 
     gravityInit() {
-        const container = document.querySelector('[data-gravity-container]');
-        if (container) {
-            const rect = container.getBoundingClientRect();
-            this.containerBounds = {
-                left: rect.left,
-                right: rect.right,
-                top: rect.top,
-                bottom: rect.bottom,
-                width: rect.width,
-                height: rect.height
-            };
-        }
-
         this.bodies = document.querySelectorAll('body,.enable-gravity,[data-gravity]');
         this.bodies.forEach((element, index) => {
             element.index = index;
@@ -67,7 +55,7 @@ class Gravity
             const values = transform.split('(')[1].split(')')[0].split(',');
             const a = parseFloat(values[0]);
             const b = parseFloat(values[1]);
-            initialRotation = Math.atan2(b, a); 
+            initialRotation = Math.atan2(b, a);
         }
 
         if (cached.rotation !== 0) {
@@ -95,6 +83,20 @@ class Gravity
             const down = parseValue(cached.velocityDown, element);
             const up = parseValue(cached.velocityUp, element);
             initialVelocityY = down - up;
+        }
+
+        const container = element.closest('[data-gravity-container]');
+        let containerBounds = null;
+        if (container) {
+            const containerRect = container.getBoundingClientRect();
+            containerBounds = {
+                left: containerRect.left,
+                right: containerRect.right,
+                top: containerRect.top,
+                bottom: containerRect.bottom,
+                width: containerRect.width,
+                height: containerRect.height
+            };
         }
 
         const bodyState = {
@@ -127,7 +129,8 @@ class Gravity
             sleeping: false,
             sleepTime: 0,
             colliding: false,
-            collidingWith: new Set()
+            collidingWith: new Set(),
+            containerBounds: containerBounds
         };
 
         bodyState.inverseInertia = bodyState.fixedRotation || bodyState.type === 'static' ? 0 : 1 / bodyState.inertia;
@@ -269,6 +272,10 @@ class Gravity
             this.solveCollisions();
         }
 
+        for (let i = 0; i < this.constraintIterations; i++) {
+            this.solveConstraints();
+        }
+
         this.bodyData.forEach((bodyState, element) => {
             if (bodyState.type === 'static') return;
             this.updateElement(element, bodyState);
@@ -330,9 +337,12 @@ class Gravity
             if (cached.positionX) {
                 const posStr = cached.positionX.trim();
                 if (posStr.startsWith('--')) {
-                    const percent = parseFloat(getComputedStyle(bodyState.element).getPropertyValue(posStr).trim()) || 0;
-                    if (this.containerBounds) {
-                        bodyState.x = this.containerBounds.left + (this.containerBounds.width * percent / 100);
+                    const cssValue = getComputedStyle(bodyState.element).getPropertyValue(posStr).trim();
+                    const value = parseFloat(cssValue) || 0;
+                    if (cssValue.endsWith('px') || posStr.endsWith('-px')) {
+                        bodyState.x = value;
+                    } else if (bodyState.containerBounds) {
+                        bodyState.x = bodyState.containerBounds.left + (bodyState.containerBounds.width * value / 100);
                     }
                 } else {
                     bodyState.x = parseFloat(posStr);
@@ -341,9 +351,12 @@ class Gravity
             if (cached.positionY) {
                 const posStr = cached.positionY.trim();
                 if (posStr.startsWith('--')) {
-                    const percent = parseFloat(getComputedStyle(bodyState.element).getPropertyValue(posStr).trim()) || 0;
-                    if (this.containerBounds) {
-                        bodyState.y = this.containerBounds.top + (this.containerBounds.height * percent / 100);
+                    const cssValue = getComputedStyle(bodyState.element).getPropertyValue(posStr).trim();
+                    const value = parseFloat(cssValue) || 0;
+                    if (cssValue.endsWith('px') || posStr.endsWith('-px')) {
+                        bodyState.y = value;
+                    } else if (bodyState.containerBounds) {
+                        bodyState.y = bodyState.containerBounds.top + (bodyState.containerBounds.height * value / 100);
                     }
                 } else {
                     bodyState.y = parseFloat(posStr);
@@ -379,24 +392,24 @@ class Gravity
         bodyState.y += bodyState.velocityY * dt * 3;
         bodyState.rotation += bodyState.angularVelocity * dt;
 
-        if (this.containerBounds && bodyState.type === 'dynamic') {
+        if (bodyState.containerBounds && bodyState.type === 'dynamic') {
             const halfWidth = bodyState.width / 2;
             const halfHeight = bodyState.height / 2;
 
-            if (bodyState.x - halfWidth < this.containerBounds.left) {
-                bodyState.x = this.containerBounds.left + halfWidth;
+            if (bodyState.x - halfWidth < bodyState.containerBounds.left) {
+                bodyState.x = bodyState.containerBounds.left + halfWidth;
                 bodyState.velocityX = Math.abs(bodyState.velocityX) * bodyState.restitution;
             }
-            if (bodyState.x + halfWidth > this.containerBounds.right) {
-                bodyState.x = this.containerBounds.right - halfWidth;
+            if (bodyState.x + halfWidth > bodyState.containerBounds.right) {
+                bodyState.x = bodyState.containerBounds.right - halfWidth;
                 bodyState.velocityX = -Math.abs(bodyState.velocityX) * bodyState.restitution;
             }
-            if (bodyState.y - halfHeight < this.containerBounds.top) {
-                bodyState.y = this.containerBounds.top + halfHeight;
+            if (bodyState.y - halfHeight < bodyState.containerBounds.top) {
+                bodyState.y = bodyState.containerBounds.top + halfHeight;
                 bodyState.velocityY = Math.abs(bodyState.velocityY) * bodyState.restitution;
             }
-            if (bodyState.y + halfHeight > this.containerBounds.bottom) {
-                bodyState.y = this.containerBounds.bottom - halfHeight;
+            if (bodyState.y + halfHeight > bodyState.containerBounds.bottom) {
+                bodyState.y = bodyState.containerBounds.bottom - halfHeight;
                 bodyState.velocityY = -Math.abs(bodyState.velocityY) * bodyState.restitution;
             }
         }
@@ -738,7 +751,6 @@ class Gravity
         };
     }
 
-
     handleCollision(bodyA, bodyB, collision) {
         this.dispatchCollisionEvents(bodyA, bodyB);
 
@@ -943,6 +955,92 @@ class Gravity
                 bodyState.element.classList.remove('gravity-colliding');
             }
         });
+    }
+
+    solveConstraints() {
+        for (let i = this.constraints.length - 1; i >= 0; i--) {
+            const constraint = this.constraints[i];
+
+            if (constraint.broken) {
+                this.constraints.splice(i, 1);
+                continue;
+            }
+
+            const bodyA = constraint.bodyA;
+            const bodyB = constraint.bodyB;
+
+            if (!bodyA || !bodyB) {
+                this.constraints.splice(i, 1);
+                continue;
+            }
+
+            const dx = bodyB.x - bodyA.x;
+            const dy = bodyB.y - bodyA.y;
+            const currentDistance = Math.sqrt(dx * dx + dy * dy);
+
+            if (currentDistance < 0.01) continue;
+
+            const diff = currentDistance - constraint.length;
+            const percent = diff / currentDistance * constraint.stiffness;
+
+            const offsetX = dx * percent;
+            const offsetY = dy * percent;
+
+            const totalInverseMass = bodyA.inverseMass + bodyB.inverseMass;
+            if (totalInverseMass === 0) continue;
+
+            bodyA.x += offsetX * (bodyA.inverseMass / totalInverseMass);
+            bodyA.y += offsetY * (bodyA.inverseMass / totalInverseMass);
+            bodyB.x -= offsetX * (bodyB.inverseMass / totalInverseMass);
+            bodyB.y -= offsetY * (bodyB.inverseMass / totalInverseMass);
+
+            if (constraint.breakForce && constraint.breakForce > 0) {
+                const tension = Math.abs(diff);
+                if (tension > constraint.breakForce) {
+                    constraint.broken = true;
+                    const event = new CustomEvent('constraintbreak', {
+                        detail: { constraint }
+                    });
+                    bodyA.element.dispatchEvent(event);
+                    bodyB.element.dispatchEvent(event);
+                }
+            }
+        }
+    }
+
+    addConstraint(elementIdA, elementIdB, options = {}) {
+        const elementA = document.getElementById(elementIdA);
+        const elementB = document.getElementById(elementIdB);
+
+        if (!elementA || !elementB) return null;
+
+        const bodyA = this.bodyData.get(elementA);
+        const bodyB = this.bodyData.get(elementB);
+
+        if (!bodyA || !bodyB) return null;
+
+        const dx = bodyB.x - bodyA.x;
+        const dy = bodyB.y - bodyA.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        const constraint = {
+            bodyA: bodyA,
+            bodyB: bodyB,
+            length: options.length !== undefined ? options.length : distance,
+            stiffness: options.stiffness !== undefined ? options.stiffness : 0.5,
+            breakForce: options.breakForce !== undefined ? options.breakForce : 0,
+            broken: false
+        };
+
+        this.constraints.push(constraint);
+        return constraint;
+    }
+
+    removeConstraint(constraint) {
+        const index = this.constraints.indexOf(constraint);
+        if (index > -1) {
+            this.constraints.splice(index, 1);
+        }
     }
 
     updateElement(element, bodyState) {
